@@ -1,6 +1,6 @@
 # Load libraries
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(posterior, parameters, insight, see, tidybayes, rethinking, rstanarm, cmdstanr, tidyverse, lmerTest, ggeffects, plyr, reshape2, rptR, viridis, cowplot, bayesplot, patchwork, lubridate)
+pacman::p_load(posterior, parameters, insight, flextable, see, tidybayes, rethinking, rstanarm, cmdstanr, tidyverse, lmerTest, ggeffects, plyr, reshape2, rptR, viridis, cowplot, bayesplot, patchwork, lubridate)
 
 # Set wd
 setwd("C:/Users/sanja/OneDrive/Desktop/PostDocStuff/IGF-1")
@@ -116,7 +116,7 @@ post_growth <- process_fit_growth_model(fit_mod_growth, temp_g,
   geom_line(data=post_weight$mu_median,  aes(y=value), size=1.2, colour="#FFBA52FF", alpha=0.8) +
   theme_cowplot() +
   ylab("August Body Weight (in kg)") + 
-  xlab("Normalized True IGF-1 Concentration") +
+  xlab("") +
   scale_x_continuous(n.breaks=6) +
   panel_bg(fill = "gray95", color = NA) +
   grid_lines(color = "white") +
@@ -146,14 +146,27 @@ post_growth <- process_fit_growth_model(fit_mod_growth, temp_g,
   geom_line(data=post_growth$mu_median,  aes(y=value), size=1.2, colour="#2C5F2D", alpha=0.8) +
   theme_cowplot() +
   ylab("August Body Weight (in kg)") + 
-  xlab("Normalized True IGF-1 Concentration") +
+  xlab("") +
   scale_x_continuous(n.breaks=6) +
   panel_bg(fill = "gray95", color = NA) +
   grid_lines(color = "white") +
   ggtitle("Model accounting for variation in birth weight") +
   theme(legend.text = element_text(size=10),
         legend.title = element_text(size=10),
-        plot.title = element_text(size = 14, face="plain")))
+        plot.title = element_text(size = 10, face="plain")))
+
+# Save plots
+plot2 <- cowplot::plot_grid(plot_weight, 
+                            plot_foreleg , 
+                            plot_growth ,
+                            nrow = 1,
+                            labels = c("A", "B", "C"),
+                            align = "vh")
+
+plot2
+
+ggsave("./IGF1_Writeup/Figures/IGF1_MorphoModels.tiff", plot2, dpi=600, width=12, height=4, bg="white" )
+
 
 # Model summary
 # List the predictors for each model
@@ -166,5 +179,13 @@ full_post_weight <- summarize_model(fit_mod_weight, predictors_weight)
 full_post_foreleg <- summarize_model(fit_mod_foreleg, predictors_foreleg)
 full_post_growth <- summarize_model(fit_mod_growth, predictors_growth)
 
-library(flextable)
-flextable(full_post_weight)
+full_post_df <- bind_rows(full_post_weight, full_post_foreleg, full_post_growth)
+full_post_df
+
+# Combine model summary tables
+ft <- flextable(full_post_df) 
+ft <- colformat_double(x=ft, j=c(2:9), digits = 3)  
+ft <- autofit(ft)
+ft
+ft %>% save_as_docx(path="./IGF1_Writeup/Tables/IGF1_MorphoModelsTable.docx")
+
