@@ -126,6 +126,26 @@ run_stan_model <- function(model_file, data_list, seed = 123, chains = 4, parall
   return(fit_mod)
 }
 
+# Function to run stan model (bernoulli)
+run_stan_bernoulli_model <- function(model_file, data_list, seed = 123, chains = 4, parallel_chains = 4, refresh = 500,   
+                           iter_sampling=4000,
+                           iter_warmup = 2000, 
+                           adapt_delta = 0.99999
+) {
+  mod <- cmdstan_model(model_file)
+  fit_mod <- mod$sample(
+    data = data_list,
+    seed = seed,
+    chains = chains,
+    parallel_chains = parallel_chains,
+    refresh = refresh,
+    iter_sampling = iter_sampling,
+    iter_warmup = iter_warmup,
+    adapt_delta = adapt_delta
+  )
+  return(fit_mod)
+}
+
 # Function to run stan diagnostics
 run_cmdstan_diagnose <- function(fit_mod_list) {
   for (fit_mod in fit_mod_list) {
@@ -272,6 +292,39 @@ process_fit_bernoulli_model <- function(fit_mod, temp_data, variables, sample_va
   return(list(summary_mu = summary_mu, summary_500draws_mu = summ_draw_mu, mu_median = mu_median))
 }
 
+# Model processing to plot y~x and 500 draws from posterior (binomial model)
+process_fit_bern_wt_model <- function(fit_mod, temp_data, variables, sample_variable) {
+  post_mod <- fit_mod$draws(variables = variables, format = "df")
+  
+  mu.link <- function(IGF1_true)
+    inv_logit(post_mod$alpha +
+                post_mod$beta_SexF * 1 +
+                post_mod$beta_Twin * 0 +
+                post_mod$beta_PopSize * mean(temp_data$PopSize_sc) +
+                post_mod$beta_Weight * mean(temp_data$Weight_sc) +
+                post_mod$beta_IGF * IGF1_true)
+  
+  igf_seq <- modelr::seq_range(temp_data$IGF_true, n = 200)
+  mu <- sapply(igf_seq, mu.link)
+  
+  mu_mean <- apply(mu, 2, mean)
+  mu_CI <- apply(mu, 2, PI, prob = 0.95)
+  summary_mu <- rbind(mu_mean, mu_CI)
+  
+  mu_df <- as.data.frame(mu)
+  mu_500 <- sample_n(mu_df, 500)
+  mu_500$draw <- seq(1, 500, 1)
+  mu_500_melt <- mu_500 %>% melt(id.vars = c("draw")) %>% arrange(draw)
+  summ_draw_mu <- cbind(igf_seq, mu_500_melt)
+  summ_draw_mu <- summ_draw_mu %>%
+    dplyr::rename(IGF_true = igf_seq, !!as.name(sample_variable) := variable)
+  mu_median <- apply(mu, 2, median) %>%
+    as.data.frame()
+  mu_median <- cbind(igf_seq, mu_median)
+  colnames(mu_median) <- c("IGF_true", "value")
+  
+  return(list(summary_mu = summary_mu, summary_500draws_mu = summ_draw_mu, mu_median = mu_median))
+}
 
 # Another function pooling all these 3 together
 process_fit_model <- function(fit_mod, temp_data, variables, sample_variable, model_type) {
