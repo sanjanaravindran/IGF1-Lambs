@@ -112,41 +112,53 @@ post_repro <- process_fit_bernoulli_model(fit_mod_repro, temp_r,
                                              "BredAsAYearling")
 
 #Plotting
-ggplot(data= temp_s, aes(x=IGF_true, y=Survival)) +
-  geom_point(colour="#078282FF", alpha=0.6) +
+plot_surv <- ggplot(data= temp_s, aes(x=IGF_true, y=Survival)) +
+  geom_point(colour="#5e8d83", alpha=0.6) +
   geom_line(data=post_survival$summary_500draws_mu,  aes(y=value, group=draw), colour="#339E66FF", alpha=1/15) +
   geom_line(data=post_survival$mu_median,  aes(y=value), size=1.2, colour="#078282FF", alpha=0.8) +
   theme_cowplot() +
-  ylab("First-Year Survival Probability") + 
-  xlab("Normalized True IGF-1 Concentration (ng/ml)") +
+  ylab("First-Year Overwinter Survival") + 
+  xlab("") +
   panel_bg(fill = "gray95", color = NA) +
   grid_lines(color = "white") +
   theme(legend.text = element_text(size=10),
         legend.title = element_text(size=10))
 
-ggplot(data= temp_sw, aes(x=IGF_true, y=Survival)) +
-  geom_point(colour="#078282FF", alpha=0.6) +
-  geom_line(data=post_survwt$summary_500draws_mu,  aes(y=value, group=draw), colour="#339E66FF", alpha=1/15) +
-  geom_line(data=post_survwt$mu_median,  aes(y=value), size=1.2, colour="#078282FF", alpha=0.8) +
+plot_survwt <- ggplot(data= temp_sw, aes(x=IGF_true, y=Survival)) +
+  geom_point(colour="#ccb0be", alpha=0.6) +
+  geom_line(data=post_survwt$summary_500draws_mu,  aes(y=value, group=draw), colour="#72668a", alpha=1/15) +
+  geom_line(data=post_survwt$mu_median,  aes(y=value), size=1.2, colour="#374971", alpha=0.8) +
   theme_cowplot() +
-  ylab("First-Year Survival Probability") + 
-  xlab("Normalized True IGF-1 Concentration (ng/ml)") +
-  panel_bg(fill = "gray95", color = NA) +
-  grid_lines(color = "white") +
-  theme(legend.text = element_text(size=10),
-        legend.title = element_text(size=10))
-
-ggplot(data= temp_r, aes(x=IGF_true, y=BredAsAYearling)) +
-  geom_point(colour="#078282FF", alpha=0.6) +
-  geom_line(data=post_repro$summary_500draws_mu,  aes(y=value, group=draw), colour="#339E66FF", alpha=1/15) +
-  geom_line(data=post_repro$mu_median,  aes(y=value), size=1.2, colour="#078282FF", alpha=0.8) +
-  theme_cowplot() +
-  ylab("Annual Reproduction") + 
+  ylab("First-Year Overwinter Survival") + 
   xlab("Normalized True IGF-1 Concentration") +
   panel_bg(fill = "gray95", color = NA) +
   grid_lines(color = "white") +
   theme(legend.text = element_text(size=10),
         legend.title = element_text(size=10))
+
+plot_repro <- ggplot(data= temp_r, aes(x=IGF_true, y=BredAsAYearling)) +
+  geom_point(colour="#a67d65", alpha=0.6) +
+  geom_line(data=post_repro$summary_500draws_mu,  aes(y=value, group=draw), colour="#a65e58", alpha=1/15) +
+  geom_line(data=post_repro$mu_median,  aes(y=value), size=1.2, colour="#400101", alpha=0.8) +
+  theme_cowplot() +
+  ylab("First-Year Reproduction") + 
+  xlab("") +
+  panel_bg(fill = "gray95", color = NA) +
+  grid_lines(color = "white") +
+  theme(legend.text = element_text(size=10),
+        legend.title = element_text(size=10))
+
+# Save plots
+plot2 <- cowplot::plot_grid(plot_surv, 
+                            plot_survwt , 
+                            plot_repro ,
+                            nrow = 1,
+                            labels = c("A", "B", "C"),
+                            align = "vh")
+
+plot2
+
+ggsave("./IGF1_Writeup/Figures/IGF1_LHModels.tiff", plot2, dpi=600, width=12, height=4, bg="white" )
 
 
 # Model summary
@@ -160,7 +172,7 @@ full_post_surv <- summarize_model(fit_mod_surv, predictors_surv)
 full_post_survwt <- summarize_model(fit_mod_survwt, predictors_survwt)
 full_post_repro <- summarize_model(fit_mod_repro, predictors_repro)
 
-full_post_df <- bind_rows(full_post_weight, full_post_foreleg, full_post_growth)
+full_post_df <- bind_rows(full_post_surv, full_post_survwt, full_post_repro)
 full_post_df
 
 # Combine model summary tables
@@ -168,163 +180,5 @@ ft <- flextable(full_post_df)
 ft <- colformat_double(x=ft, j=c(2:9), digits = 3)  
 ft <- autofit(ft)
 ft
-ft %>% save_as_docx(path="./IGF1_Writeup/Tables/IGF1_MorphoModelsTable.docx")
+ft %>% save_as_docx(path="./IGF1_Writeup/Tables/IGF1_LHModelsTable.docx")
 
-
-
-# Check survival model
-# mod_surv <- cmdstan_model(file_s)
-# fit_mod_surv <- mod_surv$sample(
-#   data = data_survival,
-#   seed = 123,
-#   chains = 4,
-#   parallel_chains = 4,
-#   refresh = 500,
-#   iter_sampling=6000,
-#   iter_warmup = 2000,
-#   adapt_delta = 0.99999
-# )
-
-
-
-# Random bits of code: 
-# Weight_rep_post <- fit_mod_weight$draws(variables="Weight_rep", format="matrix")
-# p1 <- ppc_dens_overlay(as.numeric(temp_w$Weight_sc), Weight_rep_post[1:100, ])
-# ForeLeg_rep_post <- fit_mod_foreleg$draws(variables="ForeLeg_rep", format="matrix")
-# p2 <- ppc_dens_overlay(as.numeric(temp_f$ForeLeg_sc), ForeLeg_rep_post[1:100, ])
-# Survival_rep_post <- fit_mod_survival$draws(variables="Survival_rep", format="matrix")
-# p3 <- ppc_dens_overlay(as.numeric(temp_s$Survival), Survival_rep_post[1:100, ])
-# Repro_rep_post <- fit_mod_repro$draws(variables="Repro_rep", format="matrix")
-# p4 <- ppc_dens_overlay(as.numeric(temp_s$OffspringNumber), Repro_rep_post[1:100, ])
-# 
-
-# Extract samples
-# stanfit_weight <- rstan::read_stan_csv(fit_mod_weight$output_files())
-# post_IGFTrue <- as.data.frame(rstan::extract(stanfit_weight, pars = c('IGF_true'), permuted = TRUE, include = TRUE)$IGF_true)
-# 
-# chk <- as.data.frame(rstan::extract(stanfit_weight, pars = c('IGF_true'), permuted = TRUE))
-# 
-# chk <- rstan::extract(stanfit_weight, pars = c('IGF_true'), permuted = FALSE) %>% reshape2::melt()
-# 
-# post_WeightRep <- as.data.frame(rstan::extract(stanfit_weight, pars = c('Weight_rep'), permuted = FALSE, include = TRUE)$Weight_rep)
-
-# Add "true" IGF values estimated in model to original dataset with observed values to compare against
-# temp_w$IGF_true <- apply( post_IGFTrue , 2 , mean )
-# temp_w$Weight_pred <- apply(post_WeightRep, 2, mean)
-
-# post_w_IGFTrue <- fit_mod_weight %>%
-#   spread_draws(IGF_true[i]) %>%
-#   summarise_draws()
-# 
-# post_f_IGFTrue <- fit_mod_foreleg %>%
-#   spread_draws(IGF_true[i]) %>%
-#   summarise_draws()
-# 
-# post_s_IGFTrue <- fit_mod_survival %>%
-#   spread_draws(IGF_true[i]) %>%
-#   summarise_draws()
-# 
-# post_r_IGFTrue <- fit_mod_repro %>%
-#   spread_draws(IGF_true[i]) %>%
-#   summarise_draws()
-# Add "true" IGF values estimated in model to original dataset with observed values to compare against
-# temp_w$IGF_true <- post_w_IGFTrue$mean
-# temp_f$IGF_true <- post_f_IGFTrue$mean
-# temp_s$IGF_true <- post_s_IGFTrue$mean
-# temp_r$IGF_true <- post_r_IGFTrue$mean
-# 
-# # Plotting
-# # Scatter-plot of IGF_true and observed IGF values 
-# temp_w %>%
-#   select(IGF1_sc, IGF_true) %>%
-#   melt() %>%
-#   mutate(SampleID = rep(1:680, times=2)) %>%
-#   ggplot(aes(x=variable,y=value)) + 
-#   geom_violin(aes(group=variable, fill=variable, colour=variable), alpha=0.5) +
-#   geom_line(aes(group=SampleID), alpha=0.2) +
-#   scale_fill_manual(values=c("#B4A7D6","#C27BA0")) +
-#   scale_colour_manual(values=c("#B4A7D6","#C27BA0")) +
-#   coord_flip()
-# 
-# temp_f %>%
-#   select(IGF1_sc, IGF_true) %>%
-#   melt() %>%
-#   mutate(SampleID = rep(1:680, times=2)) %>%
-#   ggplot(aes(x=variable,y=value)) + 
-#   geom_violin(aes(group=variable, fill=variable, colour=variable), alpha=0.5) +
-#   geom_line(aes(group=SampleID), alpha=0.2) +
-#   scale_fill_manual(values=c("#B4A7D6","#C27BA0")) +
-#   scale_colour_manual(values=c("#B4A7D6","#C27BA0")) +
-#   coord_flip()
-# 
-# temp_s %>%
-#   select(IGF1_sc, IGF_true) %>%
-#   melt() %>%
-#   mutate(SampleID = rep(1:680, times=2)) %>%
-#   ggplot(aes(x=variable,y=value)) + 
-#   geom_violin(aes(group=variable, fill=variable, colour=variable), alpha=0.5) +
-#   geom_line(aes(group=SampleID), alpha=0.2) +
-#   scale_fill_manual(values=c("#B4A7D6","#C27BA0")) +
-#   scale_colour_manual(values=c("#B4A7D6","#C27BA0")) +
-#   coord_flip()
-# 
-# temp_r %>%
-#   select(IGF1_sc, IGF_true) %>%
-#   melt() %>%
-#   mutate(SampleID = rep(1:680, times=2)) %>%
-#   ggplot(aes(x=variable,y=value)) + 
-#   geom_violin(aes(group=variable, fill=variable, colour=variable), alpha=0.5) +
-#   geom_line(aes(group=SampleID), alpha=0.2) +
-#   scale_fill_manual(values=c("#B4A7D6","#C27BA0")) +
-#   scale_colour_manual(values=c("#B4A7D6","#C27BA0")) +
-#   coord_flip()
-# 
-# post.mod_weight = fit_mod_weight$draws(variables = c("alpha", "beta_IGF", "beta_SexF", "beta_Twin", "beta_PopSize"), format = "df")
-# 
-# mu.wt.link <- function(IGF1_true) post.mod_weight$alpha + post.mod_weight$beta_SexF*1 + post.mod_weight$beta_Twin*0 + post.mod_weight$beta_PopSize*mean(temp_w$PopSize_sc) + post.mod_weight$beta_IGF*(IGF1_true)
-# igf.seq <- modelr::seq_range(temp_w$IGF_true, n = 200)
-# mu.wt <- sapply( igf.seq , mu.wt.link )
-# 
-# # Get means and 95% CIs
-# mu.wt.mean <- apply( mu.wt , 2 , mean )
-# mu.wt.CI <- apply( mu.wt , 2 , PI , prob=0.95)
-# summ.mu <- rbind(mu.wt.mean, mu.wt.CI)
-# 
-# # Get 500 draws and put in a df
-# mu.wt_df <- as.data.frame(mu.wt)
-# mu.wt_100 <- sample_n(mu.wt_df, 500)
-# mu.wt_100$draw <- seq(1,500,1)
-# mu.wt_100.melt <- mu.wt_100 %>% melt(id.vars = c("draw")) %>% arrange(draw)
-# summ.draw.mu <- cbind(igf.seq, mu.wt_100.melt)
-# summ.draw.mu <- summ.draw.mu %>%
-#   dplyr::rename(IGF_true = igf.seq, Weight_sc=variable)
-# mu.wt.median <- apply( mu.wt , 2 , median ) %>%
-#   as.data.frame() 
-# mu.wt.median <- cbind(igf.seq, mu.wt.median)
-# colnames(mu.wt.median) <- c("IGF_true", "value")
-
-ggplot(temp, aes(x=DaysSinceBirth, y=Weight)) +
-  geom_point()
-
-temp_50dsb <- temp %>%
-  filter(DaysSinceBirth > 50)
-
-ggplot(temp_50dsb, aes(x=DaysSinceBirth, y=Weight)) +
-  geom_point() +
-  geom_smooth()
-
-
-library(mgcv)
-gam1 <- gam(Weight ~ s(DaysSinceBirth, k=6), data=temp)
-summary(gam1)
-
-lm1 <- lm(Weight ~ DaysSinceBirth, data=temp)
-summary(lm1)
-AIC(lm1)
-
-temp_nom <- temp %>%
-  drop_na(DaysSinceBirth)
-
-lm2 <- lmer(Weight ~ factor(SexF) + factor(Twin) + (1|BirthYear) + (1|MumID) + PopSize + BirthWt + DaysSinceBirth, REML=F, data=temp_nom)
-summary(lm2)
-AIC(lm2)
