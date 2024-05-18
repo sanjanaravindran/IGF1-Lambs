@@ -232,6 +232,7 @@ plot3
 
 ggsave("./IGF1_Writeup/Figures/IGF1_SexLitSizeHistograms.tiff", plot3, dpi=600, width=12, height=4, bg="white" )
 
+# Extra code bits below
 
 # Plot variance components as stacked bar plot
 # 
