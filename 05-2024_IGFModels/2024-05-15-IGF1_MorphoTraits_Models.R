@@ -7,7 +7,7 @@ setwd("C:/Users/sanja/OneDrive/Desktop/PostDocStuff/IGF-1")
 
 # Read Data
 igf_lh_data <- read.csv('2024MARCH_IGF1DataCollection/2024May_FinalIGF-LHDataset.csv',  header = T, stringsAsFactors = F, fileEncoding="UTF-8-BOM")
-source("03-2024-IGF1DataAnalysis/useful_functions.R")
+source("03-2024-IGF1DataAnalysis/05-2024_IGFModels/useful_functions.R")
 
 # Only include Ashworth Data and data that passed intra-assay CV < 10% (14 samples failed i.e. 2% of samples)
 igf_lh_data <- igf_lh_data %>%
@@ -43,13 +43,13 @@ data_foreleg <- prepare_data_list(temp_f)
 data_growth <- prepare_data_list(temp_g)
 
 # Run the model using cmdstanr
-file_w <- here::here("03-2024-IGF1DataAnalysis/StanModel_IGF_Weight.stan")
+file_w <- here::here("03-2024-IGF1DataAnalysis/05-2024_IGFModels/StanModel_IGF_Weight.stan")
 fit_mod_weight <- run_stan_model(file_w, data_weight)
 
-file_f <- here::here("03-2024-IGF1DataAnalysis/StanModel_IGF_ForeLeg.stan")
+file_f <- here::here("03-2024-IGF1DataAnalysis/05-2024_IGFModels/StanModel_IGF_ForeLeg.stan")
 fit_mod_foreleg <- run_stan_model(file_f, data_foreleg)
 
-file_g <- here::here("03-2024-IGF1DataAnalysis/StanModel_IGF_Growth.stan")
+file_g <- here::here("03-2024-IGF1DataAnalysis/05-2024_IGFModels/StanModel_IGF_Growth.stan")
 fit_mod_growth <- run_stan_model(file_g, data_growth)
 
 
