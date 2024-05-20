@@ -36,6 +36,10 @@ mod_igf <- rstanarm::stan_lmer(IGF1 ~ SexF + Twin + PopSize_sc + (1|ELISARunDate
                      # QR=TRUE,
                      data=temp)
 
+IGF <- temp$IGF1
+IGF_rep <- posterior_predict(mod_igf)
+(p0 <- ppc_dens_overlay(IGF, IGF_rep[1:200,]) + labs(subtitle = "IGF-1")) 
+
 # Check model in lme4
 mod_igf_lmer <-lmer(IGF1 ~ SexF + Twin + PopSize_sc + (1|ELISARunDate) + (1|PlateNumber) + (1|BirthYear) + (1|MumID),
                      # cores=4, 
@@ -196,6 +200,12 @@ modelsummary(mod_igf, statistic = "conf.int", output="./IGF1_Writeup/Tables/IGFM
 
 
 # Extra figs 
+# IGF histogram 
+(plot_igf <- ggplot(data=igf_lh_data, aes(x=IGF1)) +
+  geom_histogram(bins=30)) +
+  theme(legend.title=element_blank(), 
+        text = element_text(size = 16))
+  
 # Histogram per sex
 means_sex <- ddply(igf_lh_data, "Sex_R", summarise, grp.mean=mean(IGF1))
 means_sex
@@ -220,17 +230,18 @@ plot_igf_twins <- ggplot(data=igf_lh_data, aes(x=IGF1, color=factor(Twin))) +
   theme(legend.title=element_blank(), 
         text = element_text(size = 16))
 
-plot_igf_sex+plot_igf_twins
+plot_igf + plot_igf_sex+plot_igf_twins
 
-plot3 <- cowplot::plot_grid(plot_igf_sex, 
+plot3 <- cowplot::plot_grid(plot_igf,
+                            plot_igf_sex, 
                             plot_igf_twins , 
                             nrow = 1,
-                            labels = c("A", "B"),
+                            labels = c("A", "B", "C"),
                             align = "h")
 
 plot3
 
-ggsave("./IGF1_Writeup/Figures/IGF1_SexLitSizeHistograms.tiff", plot3, dpi=600, width=12, height=4, bg="white" )
+ggsave("./IGF1_Writeup/Figures/IGF1_Histograms.tiff", plot3, dpi=600, width=18, height=4, bg="white" )
 
 # Extra code bits below
 

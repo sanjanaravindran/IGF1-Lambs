@@ -68,7 +68,7 @@ run_cmdstan_diagnose(fit_mod_list)
 color_scheme_set("mix-teal-pink")
 (p1 <- generate_and_plot_ppc(fit_mod_weight, "Weight_rep", temp_w, temp_w$Weight, "Weight"))
 (p2 <- generate_and_plot_ppc(fit_mod_foreleg, "ForeLeg_rep", temp_f, temp_f$ForeLeg, "Foreleg"))
-(p3 <- generate_and_plot_ppc(fit_mod_growth, "Weight_rep", temp_g, temp_g$Weight, "Weight (Model accounting for Birth Weight)"))
+(p3 <- generate_and_plot_ppc(fit_mod_growth, "Weight_rep", temp_g, temp_g$Weight, "Weight (Model accounting for birth weight \nand age at measurement)"))
 
 # Exrtact samples 
 # Add "true" IGF values estimated in model to original dataset with observed values to compare against
@@ -78,9 +78,9 @@ temp_g <- process_fit_mod(fit_mod_growth, temp_g)
 
 # Plotting
 # Scatter-plot of IGF_true and observed IGF values 
-plot_violin(temp_w, "Weight")
-plot_violin(temp_f, "Foreleg Length")
-plot_violin(temp_g, "Weight (Model accounts for variation in birth weight)")
+(violplot_w <- plot_violin(temp_w, "Weight"))
+(violplot_f <- plot_violin(temp_f, "Foreleg Length"))
+(violplot_g <- plot_violin(temp_g, "Weight (Model accounting for birth weight \nand age at measurement"))
 
 # Compare means and variances of IGF_obs vs IGF_true
 var(temp_w$IGF1_sc)

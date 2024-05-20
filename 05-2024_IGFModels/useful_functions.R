@@ -190,7 +190,12 @@ plot_violin <- function(temp_data, trait) {
     xlab("") +
     scale_x_discrete(labels= c("Observed IGF-1", "True IGF-1")) +
     theme(legend.position="none") +
-    labs(subtitle=trait)
+    labs(subtitle=trait)+
+    theme(legend.text = element_text(size=14),
+          legend.title = element_text(size=14),
+          plot.title = element_text(size = 16, face="plain"),
+          axis.text.x = element_text(size=14),
+          axis.text.y = element_text(size=14))
 }
 
 

@@ -74,9 +74,9 @@ fit_mod_reprowt$cmdstan_diagnose()
 # Check posterior dist
 color_scheme_set("mix-teal-pink")
 (p4 <- generate_and_plot_ppc(fit_mod_surv, "Survival_rep", temp_s, temp_s$Survival, "Survival"))
-(p5 <- generate_and_plot_ppc(fit_mod_survwt, "Survival_rep", temp_sw, temp_sw$Survival, "Survival"))
-(p6 <- generate_and_plot_ppc(fit_mod_repro, "BredAsAYearling_rep", temp_r, temp_r$BredAsAYearling, "BredAsAYearling"))
-(p7 <- generate_and_plot_ppc(fit_mod_reprowt, "BredAsAYearling_rep", temp_rw, temp_rw$BredAsAYearling, "BredAsAYearling"))
+(p5 <- generate_and_plot_ppc(fit_mod_survwt, "Survival_rep", temp_sw, temp_sw$Survival, "Survival (Model accounting for variation in \nsummer body weight and population size)"))
+(p6 <- generate_and_plot_ppc(fit_mod_repro, "BredAsAYearling_rep", temp_r, temp_r$BredAsAYearling, "Reproduction"))
+(p7 <- generate_and_plot_ppc(fit_mod_reprowt, "BredAsAYearling_rep", temp_rw, temp_rw$BredAsAYearling, "Reproduction (Model accounting for variation in \nsummer body weight and population size)"))
 
 
 # Exrtact samples 
@@ -88,10 +88,10 @@ temp_rw <- process_fit_mod(fit_mod_reprowt, temp_rw)
 
 # Plotting
 # Scatter-plot of IGF_true and observed IGF values 
-plot_violin(temp_s, "Survival")
-plot_violin(temp_sw, "Survival (Model accounting for variation in August weight and Population Size)")
-plot_violin(temp_r, "Reproduction")
-plot_violin(temp_rw, "Reproduction (Model accounting for variation in August weight and Population Size)")
+(violplot_s <- plot_violin(temp_s, "Survival"))
+(violplot_sw <- plot_violin(temp_sw, "Survival (Model accounting for variation in \nsummer body weight and population size)"))
+(violplot_r <- plot_violin(temp_r, "Reproduction"))
+(violplot_rw <- plot_violin(temp_rw, "Reproduction (Model accounting for variation in \nsummer body weight and population size)"))
 
 # Compare means and variances of IGF_obs vs IGF_true
 var(temp_s$IGF1_sc)
@@ -219,3 +219,40 @@ ft <- autofit(ft)
 ft
 ft %>% save_as_docx(path="./IGF1_Writeup/Tables/IGF1_LHModelsTable.docx")
 
+
+# All violin plots (combined)
+# Save plots
+plot3 <- cowplot::plot_grid(violplot_w, 
+                            violplot_f , 
+                            violplot_g ,
+                            violplot_s ,
+                            violplot_sw,
+                            violplot_r,
+                            violplot_rw,
+                            nrow = 4, ncol=2,
+                            labels = c("A", "B", "C", "D", "E", "F", "G"),
+                            align = "vh")
+
+plot3
+
+ggsave("./IGF1_Writeup/Figures/IGF1True_ViolinPlots.tiff", plot3, dpi=600, width=10, height=18, bg="white" )
+
+
+# All ppd (combined)
+# Save plots
+color_scheme_set("teal")
+plot4 <- cowplot::plot_grid(p0, 
+                            p1, 
+                            p2,
+                            p3,
+                            p4,
+                            p5,
+                            p6,
+                            p7,
+                            nrow = 4, ncol=2,
+                            labels = c("A", "B", "C", "D", "E", "F", "G", "H"),
+                            align = "vh")
+
+plot4
+
+ggsave("./IGF1_Writeup/Figures/IGF_AllPPCPlots.tiff", plot4, dpi=600, width=10, height=18, bg="white" )
