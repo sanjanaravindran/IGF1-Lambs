@@ -2,7 +2,6 @@ data {
   int<lower=0> N; //number of data points
   int<lower=0,upper=1> Survival[N]; //bodyweight response
   vector[N] IGF1_sc; //igf predictor
-  vector[N] PopSize_sc; //pop size predictor
   vector[N] SexF; // sex predictor
   vector[N] Twin; // twin predictor
   int<lower=1> num_years; //number of years
@@ -20,7 +19,6 @@ parameters {
   real beta_IGF; //slope for IGF in weight~IGF + ... model
   real beta_SexF; // slope for sex in weight~IGF + ... model
   real beta_Twin; // slope for twin in weight~IGF + ... model
-  real beta_PopSize; // slope for pop size in weight~IGF + ... model
   vector[num_years] t; //year intercepts
   vector[num_mums] u; //mum intercepts
   vector[num_days] v; //day intercepts
@@ -62,7 +60,7 @@ model {
   
   // likelihood
   Survival ~ bernoulli_logit(alpha + beta_IGF * IGF_true + beta_SexF * SexF + 
-                    beta_Twin * Twin + beta_PopSize * PopSize_sc +
+                    beta_Twin * Twin +
                     sigma_t*t[BirthYear] + sigma_u*u[MumID]);
 }
 
@@ -70,6 +68,6 @@ generated quantities {
   vector[N] Survival_rep;
   for (i in 1:N)
     Survival_rep[i] = bernoulli_logit_rng(alpha  + beta_IGF * IGF_true[i] + beta_SexF * SexF[i] + 
-                                 beta_Twin * Twin[i] + beta_PopSize * PopSize_sc[i] + 
+                                 beta_Twin * Twin[i]  + 
                                  sigma_t*t[BirthYear[i]] + sigma_u*u[MumID[i]]);
 }
